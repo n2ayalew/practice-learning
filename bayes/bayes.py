@@ -1,3 +1,4 @@
+import re
 from numpy import *
 
 def load_data_set():
@@ -54,6 +55,7 @@ def classifyNB(vec2_classify, p0Vec, p1Vec, p0, p1):
 		return 1
 	else:
 		return 0
+
 def testingNB():
 	posts,classes = load_data_set()
 	vocab = build_vocab(posts)
@@ -74,5 +76,60 @@ def testingNB():
 		else:
 			print "Nice article"
 
-testingNB()
+def parse_text(str):
+	reg = re.compile('\W+')
+	lst = reg.split(str)
+	lst = [tok.lower() for tok in lst if len(tok) > 0]
+	return lst
 
+def spam_filter_test():
+	emails = []
+	classes = []
+	vocab = []
+	for i in range (1,26):
+		spam = parse_text(open('email/spam/%d.txt' % i).read())
+		emails.append(spam)
+		classes.append(1)
+		ham = parse_text(open('email/ham/%d.txt' % i).read())
+		emails.append(ham)
+		classes.append(0)
+	test_list = []
+	vocab = build_vocab(emails)
+	training_set = range(50)
+	for i in range(10):
+		rand_index = int(random.uniform(0, len(training_set)))
+		test_list.append(training_set[rand_index])
+		del(training_set[rand_index])
+
+	vemails = []
+	class_list = []
+	for i in training_set:
+		vemails.append(convert_words_to_vec(emails[i], vocab))
+		class_list.append(classes[i])
+	p1,p0,p1Vec,p0Vec = trainNB(array(vemails), array(classes))
+
+	## Test algorithm
+	error_count = 0.0;
+	for i in test_list:
+		vec = convert_words_to_vec(emails[i], vocab)
+		algo_class = classifyNB(vec, p0Vec, p1Vec, p0, p1)
+		real_class = classes[i]
+		if (algo_class == real_class):
+			#print "EMAIL: " + str(i) + " Classified correctly"
+			error_count += 0
+		else:
+			error_count += 1.0
+			#print "EMAIL: " + str(i) + " NOT classified correctly"
+	error_percent = error_count/len(test_list)
+	#print "ERROR RATE = ", error_percent
+	return error_percent
+
+def average_error_of_spam():
+	mean = 0.0
+	num_trials = 15
+	for i in range(num_trials):
+		mean += spam_filter_test()
+	mean = mean / num_trials
+	return mean
+
+print "Average error of spam filter ", average_error_of_spam()
