@@ -40,12 +40,12 @@ def kNN_classify1(point, data_set, labels, k):
 	squares = diffs**2
 	sums = sum(squares, 1)
 	dists = sums**0.5
-	sorted_indicies = argsort(dists)
+	sorted_indicies = dists.argsort()
         class_score = {}
         for i in range(k):
             label = labels[sorted_indicies[i]]
             class_score[label] = class_score.get(label, 0) + 1
-        sorted_classes = sorted(class_score.items(), key=operator.itemgetter(1))
+        sorted_classes = sorted(class_score.items(), key=operator.itemgetter(1), reverse=True)
         return sorted_classes[0][0]
 
 def file_to_mat(filename):
@@ -67,8 +67,33 @@ def auto_norm(data):
     num_rows = data.shape[0]
     for i in range(num_rows):
             data[i] = (data[i] - mins) / (ranges)
-    return data
+    return data, ranges, mins
 
-ds, cs = file_to_mat('datingTestSet.txt')
-print ds
-print auto_norm(ds)
+def dating_class_test():
+    data, labels = file_to_mat('datingTestSet.txt')
+    data, ranges, minVals = auto_norm(data)
+    num_test = int(0.1 * shape(data)[0])
+    train_len = shape(data)[0] - num_test
+    train_data = data[num_test:,:]
+    train_labels = labels[num_test:]
+    k = 20
+    error_count = 0.0
+    for i in range(num_test):
+        guessed_label = kNN_classify1(data[i,:], train_data, train_labels, 3)
+        if (guessed_label != labels[i]):
+            error_count +=1
+    error_rate = error_count / float(num_test)
+    print str(error_rate*100) + '%'
+    return error_rate
+
+def classify_person():
+    percent_gaming = float(raw_input("Percentage of time playing video games?"))
+    ff_miles = float(raw_input("Frequent flier miles earned per year?"))
+    ice_cream = float(raw_input("Liters of ice cream consumed per year?"))
+    arr = array([ff_miles, percent_gaming, ice_cream])
+    data, labels = file_to_mat('datingTestSet.txt')
+    data, ranges, mins = auto_norm(data)
+    arr = (arr - mins) / ranges
+    classifier_result = kNN_classify1(arr, data, labels, 3)
+    return classifier_result
+
