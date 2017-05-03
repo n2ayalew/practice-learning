@@ -3,6 +3,7 @@ import re
 import operator
 import bisect
 import math
+from os import listdir
 
 def build_data_set0():
 	groups = array([[1.0, 1.1], [1.0, 1.0], [0, 0], [0, 0.1]])
@@ -32,6 +33,7 @@ def kNN_classify0(point, data_set, labels, k):
 		print 'CLASS: A'
 	else:
 		print 'CLASS: B'
+		
 
 def kNN_classify1(point, data_set, labels, k):
 	num_points = shape(data_set)[0]
@@ -87,13 +89,53 @@ def dating_class_test():
     return error_rate
 
 def classify_person():
-    percent_gaming = float(raw_input("Percentage of time playing video games?"))
-    ff_miles = float(raw_input("Frequent flier miles earned per year?"))
-    ice_cream = float(raw_input("Liters of ice cream consumed per year?"))
-    arr = array([ff_miles, percent_gaming, ice_cream])
-    data, labels = file_to_mat('datingTestSet.txt')
-    data, ranges, mins = auto_norm(data)
-    arr = (arr - mins) / ranges
-    classifier_result = kNN_classify1(arr, data, labels, 3)
-    return classifier_result
+	percent_gaming = float(raw_input("Percentage of time playing video games?"))
+	ff_miles = float(raw_input("Frequent flier miles earned per year?"))
+	ice_cream = float(raw_input("Liters of ice cream consumed per year?"))
+	arr = array([ff_miles, percent_gaming, ice_cream])
+	data, labels = file_to_mat('datingTestSet.txt')
+	data, ranges, mins = auto_norm(data)
+	arr = (arr - mins) / ranges
+	classifier_result = kNN_classify1(arr, data, labels, 3)
+	return classifier_result
+
+#CONSTS
+IMAGE_WIDTH = 32
+IMAGE_LENGTH = 32
+def img_to_vector(filename):
+	img = open(filename, 'r')
+	retvec = zeros((1,1024))
+	for i in range(IMAGE_WIDTH):
+			line = img.readline()
+			for j in range(IMAGE_LENGTH):
+					retvec[0, IMAGE_WIDTH*i+j] = int(line[j])
+	return retvec
+
+def num_classifier():
+	labels = []
+	trainning_nums = listdir('trainingDigits')
+	m = len(trainning_nums)
+	n = IMAGE_WIDTH * IMAGE_LENGTH
+	training_mat = zeros((m,n))
+	
+	for i in range(m):
+		training_mat[i,:] = img_to_vector('trainingDigits/%s' % trainning_nums[i])
+		file_num = trainning_nums[i].split('.')[0]
+		labels.append(int(file_num.split('_')[0]))
+
+	test_nums = listdir('testDigits')
+	m = len(test_nums)
+	error_rate = 0.0
+	for i in range(m):
+		file_name = test_nums[i].split('.')[0]
+		test_num = int(file_name.split('_')[0])
+		test_vector = img_to_vector('testDigits/%s' % test_nums[i])
+		chosen_number = kNN_classify1(test_vector, training_mat, labels, 5)
+		if (chosen_number != labels[i]):
+				error_rate += 1
+				print 'wrong number'
+	error_rate = error_rate / m
+	print error_rate
+
+num_classifier()
 
