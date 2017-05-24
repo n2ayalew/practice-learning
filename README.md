@@ -1,2 +1,2 @@
 # practice-learning
-Repo for learning exercises.
+Repo for ML learning exercises.
